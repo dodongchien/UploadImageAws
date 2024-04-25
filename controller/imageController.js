@@ -1,8 +1,12 @@
 const Item = require("../model/imageModel");
 const multer = require("multer");
-const { uploadToS3, getSignedUrls, S3 } = require("../helpers/awsHelpers");
+const { uploadToS3, getSignedUrls } = require("../helpers/awsHelpers");
 
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  ListObjectsCommand,
+} = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const multerConfig = {
@@ -88,22 +92,26 @@ exports.getData = async (req, res) => {
 
 exports.createImage = async (req, res) => {
   try {
-    const { fileName } = req.body;
+    const { fileNames } = req.body;
 
     const client = new S3Client({ region: process.env.S3_REGION });
-    const command = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET,
-      Key: fileName,
-    });
 
-    const presignedUrl = await getSignedUrl(client, command, {
-      expiresIn: 3600,
-    });
-    console.log("Presigned URL:", presignedUrl);
+    const presignedUrls = [];
+    for (const fileName of fileNames) {
+      const command = new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET,
+        Key: fileName,
+      });
+
+      const presignedUrl = await getSignedUrl(client, command, {
+        expiresIn: 60,
+      });
+      presignedUrls.push(presignedUrl);
+    }
 
     return res.status(200).json({
       status: 200,
-      message: presignedUrl,
+      message: presignedUrls,
     });
   } catch (error) {
     console.error(error);
