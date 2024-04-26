@@ -1,12 +1,8 @@
-const Item = require("../model/imageModel");
+const Item = require("../models/imageModel");
 const multer = require("multer");
 const { uploadToS3, getSignedUrls } = require("../helpers/awsHelpers");
 
-const {
-  S3Client,
-  PutObjectCommand,
-  ListObjectsCommand,
-} = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const multerConfig = {
