@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "Sportpix",
+    "password": "Sportpix",
+    "database": "my-database-sportpix",
+    "host": "database-my-sportpix.cli42o2we800.ap-southeast-2.rds.amazonaws.com",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
