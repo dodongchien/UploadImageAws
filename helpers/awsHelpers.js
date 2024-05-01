@@ -45,7 +45,7 @@ const getSignedUrls = async (key) => {
   const params = {
     Bucket: process.env.S3_BUCKET,
     Key: key,
-    Expires: null,
+    Expires: 604800,
     ResponseContentType: contentType,
     ResponseContentDisposition: `inline; filename="${filename}"`,
   };

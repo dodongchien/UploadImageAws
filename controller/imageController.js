@@ -1,5 +1,4 @@
 const Item = require("../models/imageModel");
-const multer = require("multer");
 const { uploadToS3, getSignedUrls } = require("../helpers/awsHelpers");
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -7,69 +6,44 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const imagesServices = require("../services/imageServices");
 
-const multerConfig = {
-  limits: 1024 * 1024,
-  fileFilter: function (req, file, done) {
-    if (
-      file.mimetype === "image/jpg" ||
-      file.mimetype === "image/png" ||
-      file.mimetype === "image/jpeg"
-    ) {
-      done(null, true);
-    } else {
-      done("Niewłaściwy plik, użyj .jpg .jpeg .png", false);
-    }
-  },
-};
-const upload = multer(multerConfig);
 // mongodb
 exports.createItem = async (req, res) => {
-  upload.array("images", null)(req, res, async (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({
-        status: 500,
-        message: "Internal server error",
-      });
-    }
-
-    try {
-      const images = [];
-      if (req.files && req.files.length > 0) {
-        for (const file of req.files) {
-          const result = await uploadToS3(file.buffer);
-          if (!result || !result.Key) {
-            return res.status(400).json({
-              status: 400,
-              message: "Upload file to S3 failed",
-            });
-          }
-          const imageKey = result.Key;
-          const imageUrl = await getSignedUrls(imageKey);
-          images.push(imageUrl);
+  try {
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await uploadToS3(file.buffer);
+        if (!result || !result.Key) {
+          return res.status(400).json({
+            status: 400,
+            message: "Upload file to S3 failed",
+          });
         }
+        const imageKey = result.Key;
+        const imageUrl = await getSignedUrls(imageKey);
+        images.push(imageUrl);
       }
+    }
 
-      const item = await Item.create({ images });
-      if (!item) {
-        return res.status(400).json({
-          status: 400,
-          message: "Add Item failed",
-        });
-      }
-
-      return res.status(200).json({
-        status: 200,
-        data: item,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        status: 500,
-        message: "Internal server error",
+    const item = await Item.create({ images });
+    if (!item) {
+      return res.status(400).json({
+        status: 400,
+        message: "Add Item failed",
       });
     }
-  });
+
+    return res.status(200).json({
+      status: 200,
+      data: item,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+    });
+  }
 };
 
 exports.getData = async (req, res) => {
@@ -91,7 +65,7 @@ exports.getData = async (req, res) => {
 exports.createImage = async (req, res) => {
   try {
     const { fileNames } = req.body;
-
+    console.log("aaaa");
     const client = new S3Client({ region: process.env.S3_REGION });
 
     const presignedUrls = [];
@@ -119,54 +93,45 @@ exports.createImage = async (req, res) => {
     });
   }
 };
+
 //mysql
 exports.createImageMysql = async (req, res) => {
-  upload.array("images", null)(req, res, async (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({
-        status: 500,
-        message: "Internal server error",
-      });
-    }
-
-    try {
-      const images = [];
-      if (req.files && req.files.length > 0) {
-        for (const file of req.files) {
-          const result = await uploadToS3(file.buffer);
-          if (!result || !result.Key) {
-            return res.status(400).json({
-              status: 400,
-              message: "Upload file to S3 failed",
-            });
-          }
-          const imageKey = result.Key;
-          const imageUrl = await getSignedUrls(imageKey);
-          images.push(imageUrl);
+  try {
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await uploadToS3(file.buffer);
+        if (!result || !result.Key) {
+          return res.status(400).json({
+            status: 400,
+            message: "Upload file to S3 failed",
+          });
         }
+        const imageKey = result.Key;
+        const imageUrl = await getSignedUrls(imageKey);
+        images.push(imageUrl);
       }
-      const item = await imagesServices.create({ images });
-      console.log("aaa");
-      if (!item) {
-        return res.status(400).json({
-          status: 400,
-          message: "Add Item failed",
-        });
-      }
-
-      return res.status(200).json({
-        status: 200,
-        data: item,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        status: 500,
-        message: "Internal server error",
+    }
+    const item = await imagesServices.create({ images });
+    console.log("aaa");
+    if (!item) {
+      return res.status(400).json({
+        status: 400,
+        message: "Add Item failed",
       });
     }
-  });
+
+    return res.status(200).json({
+      status: 200,
+      data: item,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+    });
+  }
 };
 
 exports.getImage = async (req, res) => {
